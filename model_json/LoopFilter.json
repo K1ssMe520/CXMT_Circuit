@@ -1,0 +1,15 @@
+{
+    "model_name": "LoopFilter",
+    "model_description": "Filters the phase error signal from the PD to produce a stable control voltage for the VCO. Typically implemented as a low-pass filter to suppress high-frequency noise.",
+    "inputnode": "PhaseError (error signal from PD), VDD (positive power supply), VSS (negative power supply/ground)",
+    "outputnode": "Vctrl (control voltage for VCO)",
+    "parameter": null,
+    "parameter_description": "- r1: First resistor in the filter network. Increasing this value reduces bandwidth but increases phase margin; decreasing it has the opposite effect.\n- r2: Second resistor in the filter network. Affects the zero frequency of the filter; larger values move the zero to lower frequencies.\n- c1: First capacitor in the filter network. Larger values increase the filtering effect but slow down the loop response; smaller values allow faster response but less filtering.\n- c2: Second capacitor in the filter network. Determines the pole frequency; larger values provide better high-frequency attenuation but may make the loop too slow.\n\nThe optional R3 provides a weak pull-up to VDD to ensure the control voltage has a defined state when the phase detector isn't active.",
+    "netlist": "from PySpice.Unit import *\nfrom PySpice.Spice.Netlist import SubCircuitFactory\n\nclass LoopFilter(SubCircuitFactory):\n    NAME = 'LoopFilter'\n    NODES = ('PhaseError', 'Vctrl', 'VDD', 'VSS')\n  \n    def __init__(self, r1=10e3, r2=100e3, c1=100e-12, c2=10e-12):\n        super().__init__()\n        # Passive components for the loop filter\n        self.R('R1', 'PhaseError', 'Node1', r1)\n        self.R('R2', 'Node1', 'Vctrl', r2)\n        self.C('C1', 'Node1', 'VSS', c1)\n        self.C('C2', 'Vctrl', 'VSS', c2)\n        \n        # Optional biasing to VDD (if needed)\n        self.R('R3', 'VDD', 'Vctrl', 1e6)  # High resistance to provide weak pull-up",
+    "structure_description": "The loop filter is a second-order low-pass filter that processes the phase error signal from the phase detector. It consists of two resistors (R1, R2) and two capacitors (C1, C2) arranged in a passive configuration. The filter attenuates high-frequency noise while allowing the low-frequency control signal to pass through to the VCO. The output control voltage (Vctrl) is a smoothed version of the phase error signal, providing stable voltage control for the VCO.",
+    "testcode": null,
+    "testDescription": null,
+    "testresult": null,
+    "submodel_names": null,
+    "function_code": null
+}

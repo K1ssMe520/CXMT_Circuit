@@ -1,0 +1,15 @@
+{
+    "model_name": "CSGainStage",
+    "model_description": "Common-source amplifier with active load (second stage). Provides high voltage gain and drives the output node.",
+    "inputnode": "Vin_int (input of the second stage, connected to the first-stage output), Vbias2 (active-load current-source bias)",
+    "outputnode": "Vout (final output)",
+    "parameter": null,
+    "parameter_description": "- nmos_width: Channel width of the NMOS transistor (M1). Increasing this value boosts the transconductance and gain but also increases parasitic capacitances.\n- pmos_width: Channel width of the PMOS active load (M2). Larger widths provide higher output resistance (better current source) but increase area and capacitance.\n- channel_length: MOSFET channel length for both transistors. Longer lengths improve output resistance but reduce speed; shorter lengths increase speed but may degrade output resistance.\n- load_capacitance: Capacitive load at the output node (Vout). Larger values slow the transient response but may be necessary for stability or as part of frequency compensation.",
+    "netlist": "from PySpice.Unit import *\nfrom PySpice.Spice.Netlist import SubCircuitFactory\n\nclass CSGainStage(SubCircuitFactory):\n    NAME = 'CSGainStage'\n    NODES = ('Vin_int', 'Vbias2', 'Vout', 'VDD', 'VSS')\n    \n    def __init__(self, nmos_width=1e-6, pmos_width=2e-6, channel_length=0.18e-6, load_capacitance=10e-15):\n        super().__init__()\n        # Define MOSFET models (level 1)\n        self.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)\n        self.model('pmos_model', 'pmos', level=1, kp=40e-6, vto=-0.5)\n        \n        # Common-source amplifier transistor\n        self.MOSFET('M1', 'Vout', 'Vin_int', 'VSS', 'VSS', model='nmos_model', w=nmos_width, l=channel_length)\n        \n        # Active load (PMOS current source)\n        self.MOSFET('M2', 'Vout', 'Vbias2', 'VDD', 'VDD', model='pmos_model', w=pmos_width, l=channel_length)\n        \n        # Optional load capacitor\n        if load_capacitance > 0:\n            self.C('C1', 'Vout', 'VSS', load_capacitance)",
+    "structure_description": "The common-source gain stage consists of an NMOS transistor (M1) configured as a common-source amplifier with a PMOS transistor (M2) serving as an active load. The input signal (Vin_int) drives the gate of M1, while Vbias2 controls the current through the PMOS active load. The output (Vout) is taken from the drain of both transistors. This configuration provides high voltage gain and drives the output node for subsequent stages.",
+    "testcode": null,
+    "testDescription": null,
+    "testresult": null,
+    "submodel_names": null,
+    "function_code": null
+}
