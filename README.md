@@ -1,9 +1,9 @@
-# CXMT Circuit Project
+# STIC Circuit Project
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
-CXMT Circuit is a Python-based toolkit for analog circuit modeling, simulation, and verification. The project provides:
+STIC Circuit is a Python-based toolkit for analog circuit modeling, simulation, and verification. The project provides:
 - LLM agent for circuit design assistance
 - Circuit definitions in JSON format
 - Generated circuit netlist
@@ -13,8 +13,8 @@ CXMT Circuit is a Python-based toolkit for analog circuit modeling, simulation, 
 
 ## Installation
 ```bash
-git clone https://github.com/K1ssMe-a/CXMT_Circuit.git
-cd CXMT_Circuit
+git clone https://github.com/K1ssMe-a/STIC_Circuit.git
+cd STIC_Circuit
 ```
 
 ## Directory Structure
@@ -33,13 +33,13 @@ cd CXMT_Circuit
 │   ├── ClockDataRecovery/
 │   ├── OneStageAmplifier/
 │   ├── ...
-└── CXMT_Circuit.py         - Main entry point
+└── STIC_Circuit.py         - Main entry point
 ```
 
 ## Usage
-1. CXMT_Circuit.py is the main interface file. In the first few lines of the file, it defines which model API to use, the json path of the circuit module, and the top-level module name of the module to be created at present 
+1. STIC_Circuit.py is the main interface file. In the first few lines of the file, it defines which model API to use, the json path of the circuit module, and the top-level module name of the module to be created at present 
 2. For the circuit you need to generate, please refer to any file in model_json to create a json file of your own circuit, which only needs to include model_name, model_description, inputnode, output In the node part, other contents will be automatically filled with the execution of the process 
-3. After that, in the first few lines of the CXMT_Circuit.py file, modify the top-level module name of the current module to be created, and execute CXMT_Circuit.py to complete the circuit generation.
+3. After that, in the first few lines of the STIC_Circuit.py file, modify the top-level module name of the current module to be created, and execute STIC_Circuit.py to complete the circuit generation.
 
 ## Notifications
 

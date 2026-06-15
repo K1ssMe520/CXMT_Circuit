@@ -248,9 +248,9 @@ if __name__ == '__main__':
  
     model = circuit_set.all_models['Inverter']
 
-    create_sub_circuit(model)
+    # create_sub_circuit(model)
 
-    create_check_problems(model)
+    # create_check_problems(model)
 
     create_funciton_illustrate(model)
 

@@ -10,7 +10,7 @@ class Inverter(SubCircuitFactory):
         # Define MOSFET models (level 1)
         self.model('nmos_model', 'nmos', level=1, kp=100e-6, vto=0.5)
         self.model('pmos_model', 'pmos', level=1, kp=40e-6, vto=-0.5)
-    
+        
         # PMOS transistor (pull-up network)
         self.MOSFET('M1', 'Vout', 'Vin', 'VDD', 'VDD', model='pmos_model', w=pmos_width, l=channel_length)
         

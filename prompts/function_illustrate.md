@@ -25,7 +25,9 @@ Structure Description: The SARLogic implements a 4-bit successive approximation 
 8. Using the comparator output (CmpOut) to determine whether to keep each bit
 9. Generating control signals for the CDAC during the conversion process\n5. Signaling completion with the EOC output
 
-### Function Illustration
+### Response
+
+#### Function Illustration
 
 ```python
 import sys

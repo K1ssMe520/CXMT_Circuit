@@ -5,38 +5,80 @@ from netlist.Inverter import Inverter
 from PySpice.Spice.Netlist import Circuit
 from PySpice.Unit import *
 
-def test_inverter_power_supply():
-    circuit = Circuit('Inverter Power Supply Test')
-    vdd = circuit.V('dd', 'VDD', circuit.gnd, 5@u_V)
+def test_inverter_propagation_delay():
+    circuit = Circuit('Inverter Propagation Delay Test')
+    
+    # Setup power supply
+    vdd_value = 5.0
+    circuit.V('dd', 'VDD', circuit.gnd, vdd_value@u_V)
+    
+    # Add inverter with default parameters
     circuit.subcircuit(Inverter())
-    circuit.X('1', 'Inverter', 'Vin', 'Vout', circuit.gnd, 'VDD')
+    circuit.X('inv', 'Inverter', 'Vin', 'Vout', circuit.gnd, 'VDD')
     
-    input_source = circuit.V('in', 'Vin', circuit.gnd, 0@u_V)
+    # Create input pulse (1MHz square wave)
+    circuit.PulseVoltageSource('in', 'Vin', circuit.gnd,
+                              initial_value=0@u_V,
+                              pulsed_value=vdd_value@u_V,
+                              pulse_width=500@u_ns,
+                              period=1@u_us)
+    
+    # Setup transient simulation
     simulator = circuit.simulator(temperature=25, nominal_temperature=25)
+    analysis = simulator.transient(step_time=1@u_ns, end_time=2@u_us)
     
-    test_conditions = [
-        {'Vin': 0.0, 'expected_Vout': 5.0},
-        {'Vin': 5.0, 'expected_Vout': 0.0}
-    ]
+    # Extract time points and signals
+    time = np.array(analysis.time)
+    vin = np.array(analysis['Vin'])
+    vout = np.array(analysis['Vout'])
     
-    tolerance = 0.1  # 10% tolerance
-    all_passed = True
+    # Define threshold for transition detection (50% of VDD)
+    vth = vdd_value / 2
     
-    for test in test_conditions:
-        input_source.dc_value = test['Vin']@u_V
-        analysis = simulator.operating_point()
-        vout = analysis['Vout'].as_ndarray().item()
-        
-        if not (abs(vout - test['expected_Vout']) <= tolerance):
-            all_passed = False
-            print(f"FAIL: Vin={test['Vin']}V, Vout={vout:.3f}V (expected {test['expected_Vout']}V)")
+    # Find input rising and falling edges
+    input_rising = np.where((vin[:-1] < vth) & (vin[1:] >= vth))[0]
+    input_falling = np.where((vin[:-1] >= vth) & (vin[1:] < vth))[0]
     
-    if all_passed:
-        print("Test_Passed: All power supply conditions met")
+    # Find corresponding output edges
+    output_falling = np.where((vout[:-1] >= vth) & (vout[1:] < vth))[0]
+    output_rising = np.where((vout[:-1] < vth) & (vout[1:] >= vth))[0]
+    
+    # Calculate propagation delays
+    tphl = time[output_falling[0]] - time[input_rising[0]] if len(output_falling) > 0 else float('inf')
+    tplh = time[output_rising[0]] - time[input_falling[0]] if len(output_rising) > 0 else float('inf')
+    
+    # Define maximum allowed propagation delay (200ps for this technology)
+    max_delay = 200@u_ps
+    
+    # Check test results
+    test_passed = True
+    failure_reasons = []
+    
+    if tphl > max_delay:
+        test_passed = False
+        failure_reasons.append(f"tPHL ({tphl*1e9:.1f}ns) exceeds maximum allowed {max_delay*1e9:.1f}ns")
+    
+    if tplh > max_delay:
+        test_passed = False
+        failure_reasons.append(f"tPLH ({tplh*1e9:.1f}ns) exceeds maximum allowed {max_delay*1e9:.1f}ns")
+    
+    # Print test report
+    print("\n" + "="*60)
+    print("Inverter Propagation Delay Test Results")
+    print("="*60)
+    print(f"Measured Propagation Delays:")
+    print(f"  tPHL (high-to-low): {tphl*1e9:.1f} ns")
+    print(f"  tPLH (low-to-high): {tplh*1e9:.1f} ns")
+    print(f"\nSpecification: Max delay = {max_delay*1e9:.1f} ns")
+    
+    if test_passed:
+        print("\nTest_Passed: Both propagation delays within specification")
     else:
-        print("Test_Failed: One or more power supply conditions failed")
+        print("\nTest_Failed: Propagation delay violations")
+        for reason in failure_reasons:
+            print(f"  • {reason}")
     
-    return all_passed
+    return test_passed
 
 if __name__ == "__main__":
-    test_inverter_power_supply()
+    test_inverter_propagation_delay()
